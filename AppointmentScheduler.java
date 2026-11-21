@@ -23,12 +23,19 @@ public class AppointmentScheduler {
      */
     public boolean book(Appointment requested) {
         // TODO: Check hours, previous neighbor, next neighbor; add if valid.
-        if(requested.getStartMinutes() < OPEN_MINUTES || requested.getEndMinutes() > CLOSE_MINUTES){
+        if (requested == null ||
+                requested.getStartMinutes() < OPEN_MINUTES ||
+                requested.getEndMinutes() > CLOSE_MINUTES) {
             return false;
         }
+
         Appointment before = schedule.floor(requested);
         Appointment after = schedule.ceiling(requested);
-        if(requested.compareTo(before) - before.getDurationMinutes() < 0 || after.compareTo(requested) - requested.getDurationMinutes() < 0){
+
+        if (before != null && before.getEndMinutes() > requested.getStartMinutes()) {
+            return false;
+        }
+        if (after != null && after.getStartMinutes() < requested.getEndMinutes()) {
             return false;
         }
 
@@ -47,15 +54,20 @@ public class AppointmentScheduler {
     /** TODO 3: Cancel the appointment that STARTS at the given minute, if any. */
     public boolean cancel(int startMinutes) {
         // TODO: A temporary Appointment.keyAt(startMinutes) can act as a search key.
-        Appointment temp = Appointment.keyAt(startMinutes);
-        schedule 
-        return false;
+        if (startMinutes < 0 || startMinutes >= 24 * 60) {
+            return false;
+        }
+        return schedule.remove(Appointment.keyAt(startMinutes));
     }
 
     /** TODO 4: Return the earliest appointment beginning at or after time. */
     public Appointment nextAtOrAfter(int minutes) {
         // TODO: TreeSet.ceiling(Appointment.keyAt(minutes)) is useful.
-        return null;
+        if (minutes < 0 || minutes >= 24 * 60) {
+            return null;
+        }
+        Appointment requested = Appointment.keyAt(minutes);
+        return schedule.ceiling(requested);
     }
 
     /**
@@ -64,8 +76,10 @@ public class AppointmentScheduler {
      * Then print each appointment.toFileLine().
      */
     public void write(PrintWriter out) {
-        // TODO: Implement writing. Keep this exception until your code is ready.
-        throw new UnsupportedOperationException("write() not implemented");
+        out.println(FILE_HEADER);
+        for (Appointment appointment : schedule) {
+            out.println(appointment.toFileLine());
+        }
     }
 
     /** PROVIDED: loading is deliberately independent of unfinished student methods. */
